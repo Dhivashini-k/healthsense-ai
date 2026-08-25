@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthHero RAG Chatbot — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #0E7C5A;
+      --primary-dark: #0A5C43;
+      --primary-light: #E7F4EE;
+      --accent: #12A886;
+      --bg: #F0F5F3;
+      --card: #FFFFFF;
+      --text: #122420;
+      --text-muted: #5C7069;
+      --text-faint: #8CA098;
+      --border: #DEE9E4;
+      --high: #D64545;
+      --high-bg: #FBE9E9;
+      --moderate: #C67C0E;
+      --moderate-bg: #FDF3E0;
+      --low: #1E9E5A;
+      --low-bg: #E9F8EF;
+      --shadow: 0 4px 24px rgba(14,124,90,0.10);
+      --shadow-lg: 0 8px 40px rgba(14,124,90,0.15);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--primary);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    header .logo-icon {
+      width: 34px; height: 34px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    header h1 { color: #fff; font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    header .badge {
+      margin-left: 8px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+    header .spacer { flex: 1; }
+    header .api-status {
+      font-size: 11px; color: rgba(255,255,255,0.7);
+      display: flex; align-items: center; gap: 5px;
+    }
+    header .api-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px #4ade80;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      grid-template-rows: 1fr;
+      gap: 0;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* ── Patient profile panel ── */
+    .profile-panel {
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .panel-header {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--primary-light);
+    }
+    .panel-header h2 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    .patient-card {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .patient-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .patient-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .patient-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    .risk-section { padding: 16px 20px; }
+    .risk-section h3 {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--text-faint);
+      margin-bottom: 10px;
+    }
+    .risk-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 5px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .risk-item:hover { transform: translateX(2px); }
+    .risk-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .risk-name { flex: 1; font-size: 13px; font-weight: 500; }
+    .risk-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+    .risk-bar-wrap {
+      margin-top: 4px;
+      height: 3px;
+      background: #e8f0ec;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .risk-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+    /* ── Retrieval panel ── */
+    .retrieval-section {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      flex: 1;
+    }
+    .retrieval-section h3 {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--text-faint);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .retrieval-section h3 .pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .chunk-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: default;
+      transition: all 0.15s;
+    }
+    .chunk-card:hover { background: var(--primary-light); border-color: var(--accent); }
+    .chunk-header {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    }
+    .chunk-condition {
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 1px 6px; border-radius: 6px;
+    }
+    .chunk-section { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; }
+    .chunk-score {
+      font-size: 10px; font-weight: 700;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .chunk-text {
+      font-size: 11px; color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .chunk-boost {
+      font-size: 9px; color: var(--accent); font-weight: 600;
+      margin-top: 3px;
+    }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+      display: flex; flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .chat-topbar {
+      padding: 14px 24px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .chat-topbar .hh-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      box-shadow: 0 2px 8px rgba(14,124,90,0.3);
+    }
+    .chat-topbar .hh-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .chat-topbar .hh-sub { font-size: 11px; color: var(--text-faint); }
+    .chat-topbar .rag-tag {
+      margin-left: auto;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      animation: fadeUp 0.2s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .msg-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 2px;
+    }
+    .msg-avatar.bot {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff; font-size: 15px;
+    }
+    .msg-avatar.user {
+      background: var(--primary-light);
+      color: var(--primary); font-weight: 700; font-size: 12px;
+    }
+
+    .bubble {
+      max-width: 72%;
+      padding: 11px 14px;
+      border-radius: 16px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    .bubble.bot {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .bubble.user {
+      background: var(--primary);
+      color: #fff;
+      border-top-right-radius: 4px;
+    }
+
+    .bubble .source-chips {
+      display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+    }
+    .source-chip {
+      font-size: 9px; font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 7px; border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .source-chip:hover { background: var(--accent); color: #fff; }
+
+    /* suggested questions */
+    .suggestions {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 0 24px 16px;
+    }
+    .suggestion-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px; font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .suggestion-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* ── Input bar ── */
+    .input-bar {
+      padding: 14px 24px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .input-bar input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 13.5px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input-bar input:focus { border-color: var(--accent); }
+    .input-bar input::placeholder { color: var(--text-faint); }
+    .send-btn {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: var(--primary);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: var(--primary-dark); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* typing indicator */
+    .typing {
+      display: flex; gap: 4px; align-items: center;
+      padding: 10px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px; border-top-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-faint);
+      animation: blink 1.2s infinite;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink {
+      0%,80%,100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* condition colours */
+    .cond-hypertension { background: #FEE8E2; color: #C6470E; }
+    .cond-cardiovascular, .cond-cvd { background: #FCE8EE; color: #B23A5B; }
+    .cond-stroke { background: #EEE8FC; color: #6E4EC6; }
+    .cond-diabetes { background: #E7F4EE; color: #0E7C5A; }
+    .cond-ckd { background: #E3F1FC; color: #1C7FC6; }
+    .cond-general, .cond-all { background: #F0F5F3; color: #5C7069; }
+
+    .empty-retrieval {
+      text-align: center; padding: 20px 10px;
+      color: var(--text-faint); font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header>
+  <div class="logo-icon">🏥</div>
+  <h1>HealthSense AI</h1>
+  <span class="badge">RAG DEMO</span>
+  <div class="spacer"></div>
+  <div class="api-status">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiLabel">Connecting...</span>
+  </div>
+</header>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main>
+
+  <!-- ── Left: Patient Profile + RAG Chunks ── -->
+  <div class="profile-panel">
+    <div class="panel-header">
+      <h2>Demo Patient</h2>
+      <div class="patient-card">
+        <div class="patient-avatar">P</div>
+        <div>
+          <div class="patient-name">Priya Nair</div>
+          <div class="patient-meta">Female · 52 yrs · Screening #SCR-0042</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="risk-section">
+      <h3>Disease Risk Profile</h3>
+      <div id="riskItems"></div>
+    </div>
+
+    <div class="retrieval-section">
+      <h3>
+        <div class="pulse"></div>
+        Retrieved Knowledge Chunks
+      </h3>
+      <div id="chunkList">
+        <div class="empty-retrieval">Chunks appear here after each question.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right: Chat ── -->
+  <div class="chat-panel">
+    <div class="chat-topbar">
+      <div class="hh-icon">✨</div>
+      <div>
+        <div class="hh-name">HealthHero</div>
+        <div class="hh-sub">RAG-powered · Knowledge base: 30 docs · 124 chunks</div>
+      </div>
+      <div class="rag-tag">⚡ RAG Active</div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg-row">
+        <div class="msg-avatar bot">✨</div>
+        <div class="bubble bot">
+          Hi Priya! I'm HealthHero. I can see your screening results show a <strong>High hypertension risk</strong>, with moderate CVD and stroke risks.<br><br>
+          I'll use your risk profile to give you personalised guidance. What would you like to know?
+        </div>
+      </div>
+    </div>
+
+    <div class="suggestions" id="suggestions">
+      <button class="suggestion-btn" onclick="sendQuestion('What should I eat?')">🥗 What should I eat?</button>
+      <button class="suggestion-btn" onclick="sendQuestion('How can I manage my blood pressure?')">❤️ Manage blood pressure</button>
+      <button class="suggestion-btn" onclick="sendQuestion('What exercises are safe for me?')">🏃 Safe exercises</button>
+      <button class="suggestion-btn" onclick="sendQuestion('Am I at risk of a heart attack?')">⚠️ Heart attack risk?</button>
+    </div>
+
+    <div class="input-bar">
+      <input
+        id="userInput"
+        type="text"
+        placeholder="Ask HealthHero anything about your health..."
+        onkeydown="if(event.key==='Enter') sendFromInput()"
+      />
+      <button class="send-btn" onclick="sendFromInput()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+
+const RISK_PROFILE = {
+  Hypertension: { level: 'High',     pct: 80, color: '#C6470E', bg: '#FEE8E2' },
+  CVD:          { level: 'Moderate', pct: 55, color: '#B23A5B', bg: '#FCE8EE' },
+  Stroke:       { level: 'Moderate', pct: 50, color: '#6E4EC6', bg: '#EEE8FC' },
+  Diabetes:     { level: 'Low',      pct: 22, color: '#1E9E5A', bg: '#E9F8EF' },
+  CKD:          { level: 'Low',      pct: 18, color: '#1C7FC6', bg: '#E3F1FC' },
+};
+
+// ── Render risk items ────────────────────────────────────────────
+const riskContainer = document.getElementById('riskItems');
+Object.entries(RISK_PROFILE).forEach(([disease, { level, pct, color, bg }]) => {
+  riskContainer.innerHTML += `
+    <div class="risk-item">
+      <div class="risk-dot" style="background:${color}"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span class="risk-name">${disease}</span>
+          <span class="risk-badge" style="background:${bg};color:${color}">${level}</span>
+        </div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>
+    </div>`;
+});
+
+// ── API health check ─────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(`${API}/health`);
+    if (r.ok) {
+      document.getElementById('apiDot').style.background = '#4ade80';
+      document.getElementById('apiLabel').textContent = 'Backend connected';
+    } else { throw new Error(); }
+  } catch {
+    document.getElementById('apiDot').style.background = '#f87171';
+    document.getElementById('apiDot').style.boxShadow = '0 0 6px #f87171';
+    document.getElementById('apiLabel').textContent = 'Backend offline';
+  }
+}
+checkHealth();
+
+// ── Helpers ─────────────────────────────────────────────────────
+function condClass(cond) {
+  if (!cond) return 'cond-general';
+  return 'cond-' + cond.toLowerCase().replace(/\s+/g, '-');
+}
+
+function appendMsg(role, html) {
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = `msg-row ${role}`;
+  if (role === 'user') {
+    row.innerHTML = `
+      <div class="msg-avatar user">P</div>
+      <div class="bubble user">${escHtml(html)}</div>`;
+  } else {
+    row.innerHTML = `
+      <div class="msg-avatar bot">✨</div>
+      <div class="bubble bot">${html}</div>`;
+  }
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return row;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.id = 'typing-row';
+  row.innerHTML = `
+    <div class="msg-avatar bot">✨</div>
+    <div class="typing"><span></span><span></span><span></span></div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typing-row')?.remove();
+}
+
+function renderChunks(chunks) {
+  const list = document.getElementById('chunkList');
+  if (!chunks || chunks.length === 0) {
+    list.innerHTML = '<div class="empty-retrieval">No chunks retrieved.</div>';
+    return;
+  }
+  list.innerHTML = chunks.map((c, i) => {
+    const boost = (c.boosted_score - c.similarity_score).toFixed(2);
+    const boostStr = parseFloat(boost) > 0
+      ? `<div class="chunk-boost">↑ +${boost} risk boost · ${c.boost_reason}</div>`
+      : `<div class="chunk-boost" style="color:var(--text-faint)">${c.boost_reason}</div>`;
+
+    return `
+      <div class="chunk-card">
+        <div class="chunk-header">
+          <span class="chunk-condition ${condClass(c.metadata.condition)}">${(c.metadata.condition||'general').toUpperCase()}</span>
+          <span class="chunk-section">${c.metadata.section_title || c.metadata.title || ''}</span>
+          <span class="chunk-score">${c.boosted_score.toFixed(3)}</span>
+        </div>
+        <div class="chunk-text">${escHtml(c.text)}</div>
+        ${boostStr}
+      </div>`;
+  }).join('');
+}
+
+// ── Build prompt from retrieved chunks ───────────────────────────
+function buildContext(chunks) {
+  return chunks.map((c, i) => {
+    const cond = (c.metadata.condition || 'general').toUpperCase();
+    const section = c.metadata.section_title || c.metadata.title || '';
+    return `[${cond}] ${section}:\n${c.text}`;
+  }).join('\n\n');
+}
+
+// ── Main send logic ──────────────────────────────────────────────
+let history = [];
+
+async function sendQuestion(question) {
+  if (!question.trim()) return;
+  document.getElementById('userInput').value = '';
+
+  // hide suggestions after first message
+  document.getElementById('suggestions').style.display = 'none';
+
+  appendMsg('user', question);
+  showTyping();
+
+  try {
+    // Step 1: RAG retrieval
+    const ragRes = await fetch(`${API}/rag/demo-question`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question,
+        intent: detectIntent(question),
+        risk_profile: { Hypertension:'High', CVD:'Moderate', Stroke:'Moderate', Diabetes:'Low', CKD:'Low' }
+      })
+    });
+
+    let chunks = [];
+    let contextText = '';
+
+    if (ragRes.ok) {
+      const ragData = await ragRes.json();
+      chunks = ragData.retrieved_chunks || [];
+      contextText = ragData.chatbot_context || '';
+      renderChunks(chunks);
+    } else {
+      // fallback: use cached demo data from /rag/demo if POST not available
+      const demoRes = await fetch(`${API}/rag/demo`);
+      if (demoRes.ok) {
+        const d = await demoRes.json();
+        chunks = d.retrieved_chunks || [];
+        contextText = d.chatbot_context || '';
+        renderChunks(chunks);
+      }
+    }
+
+    // Step 2: Chat completion with context-enriched system prompt
+    history.push({ role: 'user', text: question });
+
+    const systemContext = contextText
+      ? `\n\nRelevant knowledge base context (use this to answer):\n${contextText}`
+      : '';
+
+    const chatRes = await fetch(`${API}/assistant/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('hs_token') || 'demo'}`
+      },
+      body: JSON.stringify({
+        role: 'Nurse',
+        messages: history,
+        system_context: systemContext
+      })
+    });
+
+    removeTyping();
+
+    let replyText = '';
+    if (chatRes.ok) {
+      const chatData = await chatRes.json();
+      replyText = chatData.text || '';
+    }
+
+    if (!replyText) {
+      // Compose a context-based fallback reply using the retrieved chunks
+      replyText = buildFallbackReply(question, chunks);
+    }
+
+    // Format reply
+    const formatted = formatReply(replyText, chunks);
+    appendMsg('bot', formatted);
+    history.push({ role: 'assistant', text: replyText });
+
+  } catch (err) {
+    removeTyping();
+    renderChunks([]);
+    appendMsg('bot', `<span style="color:var(--high)">⚠️ Could not connect to the backend. Make sure the server is running on <code>http://127.0.0.1:8000</code>.</span>`);
+  }
+}
+
+function sendFromInput() {
+  const val = document.getElementById('userInput').value.trim();
+  if (val) sendQuestion(val);
+}
+
+// ── Intent detection ─────────────────────────────────────────────
+function detectIntent(q) {
+  q = q.toLowerCase();
+  if (/eat|food|diet|meal|nutrition|sodium|snack/i.test(q)) return 'diet_guidance';
+  if (/exercise|walk|run|gym|active|physical/i.test(q)) return 'exercise_guidance';
+  if (/sleep|rest|stress/i.test(q)) return 'lifestyle_guidance';
+  if (/risk|score|percent|chance|likely/i.test(q)) return 'risk_explanation';
+  return 'general_health';
+}
+
+// ── Fallback reply builder ────────────────────────────────────────
+function buildFallbackReply(question, chunks) {
+  if (chunks.length === 0) return "I'm sorry, I couldn't find relevant information to answer that. Please consult your healthcare provider.";
+
+  const topChunks = chunks.slice(0, 4);
+  let reply = '';
+
+  if (/eat|food|diet|meal/i.test(question)) {
+    reply = `Based on your health profile — particularly your elevated hypertension risk — here's personalised dietary guidance:\n\n`;
+    topChunks.forEach(c => {
+      reply += `**${c.metadata.section_title || c.metadata.title}:** ${c.text}\n\n`;
+    });
+    reply += `Please discuss specific dietary changes with your doctor or dietitian, as individual needs may vary.`;
+  } else {
+    reply = topChunks[0]?.text || "I'd recommend discussing this with your healthcare provider for personalised advice.";
+  }
+
+  return reply;
+}
+
+// ── Format reply with markdown-like rendering ────────────────────
+function formatReply(text, chunks) {
+  let html = escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n- /g, '<br>• ')
+    .replace(/\n/g, '<br>');
+  html = `<p>${html}</p>`;
+
+  // Source chips from unique conditions
+  const conditions = [...new Set(chunks.map(c => c.metadata.condition).filter(Boolean))];
+  if (conditions.length > 0) {
+    html += `<div class="source-chips">`;
+    conditions.forEach(c => {
+      html += `<span class="source-chip">${c}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  return html;
+}
+</script>
+</body>
+</html>
