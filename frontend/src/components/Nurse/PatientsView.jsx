@@ -8,6 +8,7 @@ import { EmptyState } from '../Common/EmptyState';
 import { AddPatientForm } from './AddPatientForm';
 import { fmtDate } from '../../utils/helpers';
 import { useApp } from '../../context/AppContext';
+import PatientDetailModal from '../patients/PatientDetailModal';
 
 export function PatientsView({ db, persist, showToast }) {
   const { openPatientDetail } = useApp();
@@ -67,6 +68,7 @@ export function PatientsView({ db, persist, showToast }) {
           <AddPatientForm onSave={async (p) => { await persist({ ...db, patients: [...db.patients, p] }); setModal(null); showToast("Patient registered"); }} />
         </Modal>
       )}
+      <PatientDetailModal />
     </div>
   );
 }
