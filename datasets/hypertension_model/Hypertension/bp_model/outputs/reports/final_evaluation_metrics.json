@@ -1,0 +1,31 @@
+{
+    "architecture": "XGBoost",
+    "sbp_metrics": {
+        "target": "Systolic Blood Pressure (SBP)",
+        "mae_mmhg": 8.299,
+        "rmse_mmhg": 12.713,
+        "mape_percent": 6.302,
+        "r2_score": 0.411,
+        "pearson_r": 0.6498,
+        "bland_altman": {
+            "mean_bias_mmhg": 1.137,
+            "sd_bias_mmhg": 12.662,
+            "upper_loa_mmhg": 25.954,
+            "lower_loa_mmhg": -23.68
+        }
+    },
+    "dbp_metrics": {
+        "target": "Diastolic Blood Pressure (DBP)",
+        "mae_mmhg": 4.581,
+        "rmse_mmhg": 8.219,
+        "mape_percent": 6.9,
+        "r2_score": 0.1125,
+        "pearson_r": 0.3679,
+        "bland_altman": {
+            "mean_bias_mmhg": -0.758,
+            "sd_bias_mmhg": 8.184,
+            "upper_loa_mmhg": 15.281,
+            "lower_loa_mmhg": -16.798
+        }
+    }
+}

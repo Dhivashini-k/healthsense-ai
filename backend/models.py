@@ -52,6 +52,7 @@ class Screening(Base):
     ecg_image_url = Column(String, nullable=True)
     retinal_scan_url = Column(String, nullable=True)
     screening_date = Column(DateTime, default=datetime.datetime.utcnow)
+    follow_up_status = Column(String, default="Pending")  # Pending, Completed, Routine
 
     patient = relationship("Patient", back_populates="screenings")
 
@@ -69,6 +70,9 @@ class RiskPrediction(Base):
     risk_level = Column(String, nullable=False) # Low Risk, Moderate Risk, High Risk
     assigned_specialist = Column(String, nullable=True) # Endocrinologist, Cardiologist, Neurologist, Nephrologist
     assigned_doctor = Column(String, nullable=True)
+    model_explanations = Column(JSON, nullable=True)
+    model_version = Column(String, default="1.0")
+    model_name = Column(String, default="HealthSense NCD Screening v1.0")
 
     patient = relationship("Patient", back_populates="risk_predictions")
 

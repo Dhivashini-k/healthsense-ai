@@ -33,30 +33,31 @@ export function ArchiveView({ db, persist, showToast }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-extrabold" style={{ color: C.text }}>Risk Report Archive</h1>
+      <h1 className="text-2xl font-extrabold text-brand-text">Risk Report Archive</h1>
       <Card className="p-5 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left" style={{ color: C.textFaint }}>
-            <th className="pb-2">Patient</th>
-            {DISEASES.map((d) => <th key={d} className="pb-2">{d}</th>)}
-            <th className="pb-2">Specialist(s)</th><th className="pb-2">Date</th><th className="pb-2">Status</th><th className="pb-2">Actions</th>
+        <table className="w-full text-sm table-fixed">
+          <thead><tr className="text-left text-brand-faint">
+            <th className="pb-2 w-1/5">Patient</th>
+            {DISEASES.map((d) => <th key={d} className="pb-2 w-16">{d}</th>)}
+            <th className="pb-2 w-1/5">Specialist(s)</th><th className="pb-2 w-24">Date</th><th className="pb-2 w-24">Status</th><th className="pb-2 w-24">Actions</th>
           </tr></thead>
           <tbody>
             {groups.map((g) => (
-              <tr key={g.screening.id} className="border-t" style={{ borderColor: C.border }}>
-                <td className="py-2.5 font-semibold" style={{ color: C.text }}>{g.patient?.name}</td>
+              <tr key={g.screening.id} className="border-t border-brand-border">
+                <td className="py-2.5 font-semibold text-brand-text">{g.patient?.name}</td>
                 {DISEASES.map((d) => {
                   const val = g.screening.riskScores[d];
-                  return <td key={d} className="py-2.5 text-xs font-semibold" style={{ color: classify(val) === "High" ? C.high : classify(val) === "Moderate" ? C.moderate : C.low }}>{val}%</td>;
+                  const level = classify(val);
+                  return <td key={d} className={`py-2.5 text-xs font-semibold ${level === 'High' ? 'text-brand-high' : level === 'Moderate' ? 'text-brand-moderate' : 'text-brand-low'}`}>{val}%</td>;
                 })}
-                <td className="py-2.5 text-xs" style={{ color: C.textMuted }}>{g.specialists.join(", ") || "—"}</td>
-                <td className="py-2.5 text-xs" style={{ color: C.textFaint }}>{fmtDate(g.screening.date)}</td>
+                <td className="py-2.5 text-xs text-brand-muted">{g.specialists.join(", ") || "—"}</td>
+                <td className="py-2.5 text-xs text-brand-faint">{fmtDate(g.screening.date)}</td>
                 <td className="py-2.5"><StatusBadge status={g.status} /></td>
                 <td className="py-2.5">
                   <div className="flex gap-2">
-                    <button onClick={() => setView(g)} className="text-xs font-semibold flex items-center gap-1" style={{ color: C.primary }}><Eye size={13} /> View</button>
+                    <button onClick={() => setView(g)} className="text-xs font-semibold flex items-center gap-1 text-brand-primary"><Eye size={13} /> View</button>
                     {g.status === "Draft" && (
-                      <button onClick={() => sendReminder(g)} className="text-xs font-semibold flex items-center gap-1" style={{ color: C.moderate }}><Send size={13} /> Remind</button>
+                      <button onClick={() => sendReminder(g)} className="text-xs font-semibold flex items-center gap-1 text-brand-moderate"><Send size={13} /> Remind</button>
                     )}
                   </div>
                 </td>
@@ -74,19 +75,19 @@ export function ArchiveView({ db, persist, showToast }) {
               const val = view.screening.riskScores[d];
               const level = classify(val);
               return (
-                <div key={d} className="p-2.5 rounded-lg text-center" style={{ backgroundColor: level === "Low" ? C.lowBg : level === "Moderate" ? C.moderateBg : C.highBg }}>
-                  <div className="text-[11px] font-semibold" style={{ color: C.textMuted }}>{d}</div>
-                  <div className="text-lg font-extrabold" style={{ color: level === "Low" ? C.low : level === "Moderate" ? C.moderate : C.high }}>{val}%</div>
+                <div key={d} className={`p-2.5 rounded-lg text-center ${level === 'High' ? 'bg-brand-high-bg' : level === 'Moderate' ? 'bg-brand-moderate-bg' : 'bg-brand-low-bg'}`}>
+                  <div className="text-[11px] font-semibold text-brand-muted">{d}</div>
+                  <div className={`text-lg font-extrabold ${level === 'High' ? 'text-brand-high' : level === 'Moderate' ? 'text-brand-moderate' : 'text-brand-low'}`}>{val}%</div>
                 </div>
               );
             })}
           </div>
           {view.refs.length === 0 ? (
-            <p className="text-sm" style={{ color: C.textMuted }}>All markers Low risk — no referral required.</p>
+            <p className="text-sm text-brand-muted">All markers Low risk — no referral required.</p>
           ) : (
             <div className="space-y-2">
               {view.refs.map((r) => (
-                <div key={r.id} className="flex items-center justify-between p-2.5 rounded-lg border text-sm" style={{ borderColor: C.border }}>
+                <div key={r.id} className="flex items-center justify-between p-2.5 rounded-lg border border-brand-border text-sm">
                   <span>{r.disease} → {r.specialistRole}</span>
                   <StatusBadge status={r.status} />
                 </div>

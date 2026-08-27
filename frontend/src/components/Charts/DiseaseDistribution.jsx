@@ -24,14 +24,13 @@ export function DiseaseDistribution({ screenings, diseases }) {
     <Card className="p-5 flex-1 min-w-[340px]">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <div className="font-bold text-sm" style={{ color: C.text }}>Disease-wise Risk Distribution</div>
-          <div className="text-xs" style={{ color: C.textFaint }}>Patients per risk band</div>
+          <div className="font-bold text-sm text-brand-text">Disease-wise Risk Distribution</div>
+          <div className="text-xs text-brand-faint">Patients per risk band</div>
         </div>
         <select
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          className="text-xs px-2 py-1.5 rounded-lg border"
-          style={{ borderColor: C.border }}
+          className="text-xs px-2 py-1.5 rounded-lg border border-brand-border bg-white outline-none"
         >
           {Object.keys(durMap).map((d) => <option key={d}>{d}</option>)}
         </select>

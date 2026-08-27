@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { z } from "zod";
 import { useApp } from "../../context/AppContext";
 import { calculateNcdRisk } from "../../services/aiRiskEngine";
+import RiskGauge from "../charts/RiskGauge";
+import FeatureContributionChart from "../charts/FeatureContributionChart";
 import {
   User,
   Activity,
@@ -48,6 +51,53 @@ export default function MultiStepScreeningForm() {
   });
 
   const [screeningCompleted, setScreeningCompleted] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  // Zod Validation Schema
+  const step1Schema = z.object({
+    name: z.string().min(2, "Please enter a valid full name."),
+    age: z.coerce.number().min(18, "Age must be at least 18.").max(120, "Please verify the age."),
+    height: z.coerce.number().min(50, "Please enter a valid height.").max(300, "Please enter a valid height."),
+    weight: z.coerce.number().min(20, "Please enter a valid weight.").max(500, "Please enter a valid weight.")
+  });
+
+  const step2Schema = z.object({
+    sleep: z.coerce.number().min(0, "Sleep cannot be less than 0.").max(24, "Sleep cannot exceed 24 hours."),
+    stress: z.coerce.number().min(1, "Stress level must be at least 1.").max(10, "Stress level cannot exceed 10.")
+  });
+
+  const step4Schema = z.object({
+    bpSystolic: z.coerce.number().min(50, "Systolic BP must be at least 50.").max(250, "Systolic BP is too high."),
+    bpDiastolic: z.coerce.number().min(30, "Diastolic BP must be at least 30.").max(150, "Diastolic BP is too high."),
+    heartRate: z.coerce.number().min(30, "Heart rate seems too low.").max(200, "Heart rate seems too high."),
+    spo2: z.coerce.number().min(50, "SpO2 must be at least 50.").max(100, "SpO2 cannot exceed 100.")
+  }).refine((data) => data.bpSystolic > data.bpDiastolic, {
+    message: "Systolic BP must be greater than Diastolic BP.",
+    path: ["bpSystolic"] // Set path to field to show error on UI
+  });
+
+  const validateStep = (step) => {
+    try {
+      if (step === 1) step1Schema.parse(formData);
+      if (step === 2) step2Schema.parse(formData);
+      if (step === 4) step4Schema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors = {};
+        err.errors.forEach(e => { fieldErrors[e.path[0]] = e.message; });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
+    }
+  };
 
   // Auto BMI calculation
   const heightM = (formData.height || 170) / 100;
@@ -70,16 +120,21 @@ export default function MultiStepScreeningForm() {
 
   const handleSubmitScreening = async (e) => {
     e.preventDefault();
-    const result = calculateNcdRisk(formData);
-    const newScreening = await addScreening(result, formData);
-    setScreeningCompleted(newScreening || {
-      id: "SCR-2025-1256",
-      patientName: formData.name,
-      overallRiskScore: result.compositeScore || 78,
-      riskCategory: result.riskCategory || "High Risk",
-      assignedSpecialist: result.assignedSpecialist || "Endocrinologist",
-      riskBreakdown: result.riskBreakdown || { diabetes: 78, hypertension: 58, cvd: 64, stroke: 35, ckd: 42 }
-    });
+    try {
+      const result = await calculateNcdRisk(formData);
+      const newScreening = await addScreening(result, formData);
+      setScreeningCompleted(newScreening || {
+        id: "SCR-2025-1256",
+        patientName: formData.name,
+        overallRiskScore: result.compositeScore || 78,
+        riskCategory: result.riskCategory || "High Risk",
+        assignedSpecialist: result.assignedSpecialist || "Endocrinologist",
+        riskBreakdown: result.riskBreakdown || { diabetes: 78, hypertension: 58, cvd: 64, stroke: 35, ckd: 42 },
+        model_explanations: result.model_explanations || {}
+      });
+    } catch (err) {
+      console.error("Failed to submit screening", err);
+    }
   };
 
   const STEPS = [
@@ -135,13 +190,12 @@ export default function MultiStepScreeningForm() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-[#033B2C] text-white flex flex-col justify-between">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Overall Composite Risk</span>
-              <div className="my-3">
-                <span className="text-4xl font-black text-emerald-400">{screeningCompleted.overallRiskScore}%</span>
-                <p className="text-xs font-bold text-slate-200 mt-1">Classification: {screeningCompleted.riskCategory}</p>
+            <div className="p-5 rounded-2xl bg-[#033B2C] text-white flex flex-col justify-between items-center text-center">
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider w-full text-left">Overall Composite Risk</span>
+              <div className="my-4">
+                <RiskGauge score={screeningCompleted.overallRiskScore} />
               </div>
-              <span className="text-[11px] text-emerald-300 font-bold">Auto-Assigned: {screeningCompleted.assignedSpecialist}</span>
+              <span className="text-[11px] text-emerald-300 font-bold w-full text-left">Auto-Assigned: {screeningCompleted.assignedSpecialist}</span>
             </div>
 
             <div className="md:col-span-2 p-5 rounded-2xl bg-slate-50 border border-slate-200">
@@ -153,7 +207,7 @@ export default function MultiStepScreeningForm() {
                     <div className="flex items-center justify-between mt-2">
                       <div className="w-20 bg-slate-100 h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${val >= 71 ? 'bg-rose-500' : val >= 41 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                          className={`h-full rounded-full ${val >= 71 ? 'bg-brand-high-bg' : val >= 41 ? 'bg-brand-moderate-bg' : 'bg-brand-low-bg'}`}
                           style={{ width: `${val}%` }}
                         />
                       </div>
@@ -162,6 +216,7 @@ export default function MultiStepScreeningForm() {
                   </div>
                 ))}
               </div>
+              <FeatureContributionChart disease={screeningCompleted.primaryDisease?.split(' (')[0] || screeningCompleted.primary_disease || "General"} formData={formData} modelExplanations={screeningCompleted.model_explanations} />
             </div>
           </div>
 
@@ -224,8 +279,9 @@ export default function MultiStepScreeningForm() {
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     required
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    className={`w-full px-3.5 py-2 bg-slate-50 border ${errors.name ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                   />
+                  {errors.name && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.name}</p>}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Mobile Number</label>
@@ -244,8 +300,9 @@ export default function MultiStepScreeningForm() {
                     onChange={(e) => handleInputChange("age", e.target.value)}
                     required
                     min={18}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    className={`w-full px-3.5 py-2 bg-slate-50 border ${errors.age ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                   />
+                  {errors.age && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.age}</p>}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Gender</label>
@@ -265,8 +322,9 @@ export default function MultiStepScreeningForm() {
                     type="number"
                     value={formData.height}
                     onChange={(e) => handleInputChange("height", e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    className={`w-full px-3.5 py-2 bg-slate-50 border ${errors.height ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                   />
+                  {errors.height && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.height}</p>}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Weight (kg)</label>
@@ -274,8 +332,9 @@ export default function MultiStepScreeningForm() {
                     type="number"
                     value={formData.weight}
                     onChange={(e) => handleInputChange("weight", e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    className={`w-full px-3.5 py-2 bg-slate-50 border ${errors.weight ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                   />
+                  {errors.weight && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.weight}</p>}
                 </div>
                 <div className="sm:col-span-2 p-3 rounded-xl bg-slate-100 flex items-center justify-between font-bold text-slate-700">
                   <span>Computed BMI: <span className="text-emerald-700 font-extrabold">{computedBmi} kg/m²</span></span>
@@ -344,8 +403,9 @@ export default function MultiStepScreeningForm() {
                     type="number"
                     value={formData.sleep}
                     onChange={(e) => handleInputChange("sleep", e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    className={`w-full px-3.5 py-2 bg-slate-50 border ${errors.sleep ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                   />
+                  {errors.sleep && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.sleep}</p>}
                 </div>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Stress Level (1-10): {formData.stress}</label>
@@ -357,6 +417,7 @@ export default function MultiStepScreeningForm() {
                     onChange={(e) => handleInputChange("stress", e.target.value)}
                     className="w-full accent-emerald-600"
                   />
+                  {errors.stress && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.stress}</p>}
                 </div>
               </div>
             )}
@@ -411,8 +472,13 @@ export default function MultiStepScreeningForm() {
                           bpDiastolic: Number(parts[1]) || 80
                         });
                       }}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                      className={`w-full px-3 py-2 bg-slate-50 border ${errors.bpSystolic || errors.bpDiastolic ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                     />
+                    {(errors.bpSystolic || errors.bpDiastolic) && (
+                      <p className="text-[10px] text-rose-500 font-bold mt-1">
+                        {errors.bpSystolic || errors.bpDiastolic}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Heart Rate (BPM)</label>
@@ -420,8 +486,9 @@ export default function MultiStepScreeningForm() {
                       type="number"
                       value={formData.heartRate}
                       onChange={(e) => handleInputChange("heartRate", e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                      className={`w-full px-3 py-2 bg-slate-50 border ${errors.heartRate ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                     />
+                    {errors.heartRate && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.heartRate}</p>}
                   </div>
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">Oxygen SpO2 (%)</label>
@@ -429,8 +496,9 @@ export default function MultiStepScreeningForm() {
                       type="number"
                       value={formData.spo2}
                       onChange={(e) => handleInputChange("spo2", e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                      className={`w-full px-3 py-2 bg-slate-50 border ${errors.spo2 ? 'border-rose-400' : 'border-slate-200'} rounded-xl`}
                     />
+                    {errors.spo2 && <p className="text-[10px] text-rose-500 font-bold mt-1">{errors.spo2}</p>}
                   </div>
                 </div>
 
@@ -511,7 +579,7 @@ export default function MultiStepScreeningForm() {
               {currentStep < 5 ? (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep((prev) => Math.min(prev + 1, 5))}
+                  onClick={handleNextStep}
                   className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs"
                 >
                   Next Step <ChevronRight className="w-4 h-4 inline" />

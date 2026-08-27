@@ -74,6 +74,7 @@ def create_screening(screening_data: schemas.ScreeningCreate, db: Session = Depe
         existing_pred.risk_level = risks["risk_level"]
         existing_pred.assigned_specialist = risks.get("assigned_specialist")
         existing_pred.assigned_doctor = risks.get("assigned_doctor")
+        existing_pred.model_explanations = risks.get("model_explanations", {})
     else:
         new_pred = models.RiskPrediction(
             patient_id=patient.patient_id,
@@ -85,7 +86,8 @@ def create_screening(screening_data: schemas.ScreeningCreate, db: Session = Depe
             overall_risk=risks["overall_risk"],
             risk_level=risks["risk_level"],
             assigned_specialist=risks.get("assigned_specialist"),
-            assigned_doctor=risks.get("assigned_doctor")
+            assigned_doctor=risks.get("assigned_doctor"),
+            model_explanations=risks.get("model_explanations", {})
         )
         db.add(new_pred)
 

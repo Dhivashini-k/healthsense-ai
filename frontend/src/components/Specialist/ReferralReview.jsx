@@ -75,37 +75,37 @@ export function ReferralReview({ db, referral, onClose, onSign, onMarkSeen }) {
           )}
 
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xs font-bold uppercase tracking-wide" style={{ color: '#8CA098' }}>Patient Details</div>
+            <div className="text-xs font-bold uppercase tracking-wide text-brand-muted">Patient Details</div>
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold flex items-center gap-1">
               <CheckCircle size={13} /> Seen / Visited
             </span>
           </div>
 
-          <div className="text-sm space-y-1 mb-4" style={{ color: '#122420' }}>
+          <div className="text-sm space-y-1 mb-4 text-brand-text">
             <div><b>{patient?.name}</b> · {patient?.age}y · {patient?.gender}</div>
-            <div className="text-xs" style={{ color: '#5C7069' }}>{patient?.phone} · {patient?.address}</div>
+            <div className="text-xs text-brand-faint">{patient?.phone} · {patient?.address}</div>
           </div>
 
-          <div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8CA098' }}>Escalated Risk Report</div>
-          <div className="p-3 rounded-lg mb-4" style={{ backgroundColor: referral.riskLevel === 'High' ? '#FBE9E9' : '#FDF3E0' }}>
-            <div className="text-sm font-bold" style={{ color: '#122420' }}>{referral.disease}</div>
-            <div className="text-2xl font-extrabold" style={{ color: referral.riskLevel === 'High' ? '#D64545' : '#C67C0E' }}>{referral.riskPercent}%</div>
+          <div className="text-xs font-bold uppercase tracking-wide mb-2 text-brand-muted">Escalated Risk Report</div>
+          <div className={`p-3 rounded-lg mb-4 ${referral.riskLevel === 'High' ? 'bg-brand-high-bg' : 'bg-brand-moderate-bg'}`}>
+            <div className="text-sm font-bold text-brand-text">{referral.disease}</div>
+            <div className={`text-2xl font-extrabold ${referral.riskLevel === 'High' ? 'text-brand-high' : 'text-brand-moderate'}`}>{referral.riskPercent}%</div>
             <RiskBadge level={referral.riskLevel} />
           </div>
 
-          <div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8CA098' }}>Nurse Screening & Diagnostic Vitals</div>
-          <div className="text-xs space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200" style={{ color: '#5C7069' }}>
+          <div className="text-xs font-bold uppercase tracking-wide mb-2 text-brand-muted">Nurse Screening & Diagnostic Vitals</div>
+          <div className="text-xs space-y-2 bg-slate-50 p-3 rounded-xl border border-brand-border text-brand-muted">
             <div><b>BP:</b> {screening?.vitals.systolic}/{screening?.vitals.diastolic} mmHg · <b>BMI:</b> {screening?.vitals.bmi} · <b>HR:</b> {screening?.vitals.heartRate} bpm</div>
             <div><b>Lifestyle:</b> {screening?.lifestyle.smoking} smoking, {screening?.lifestyle.activity} activity</div>
             <div><b>Symptoms:</b> {screening?.symptoms.join(", ") || "None"}</div>
-            {screening?.notes && <div className="italic text-slate-700">"<b>Notes:</b> {screening.notes}"</div>}
+            {screening?.notes && <div className="italic text-brand-text">"<b>Notes:</b> {screening.notes}"</div>}
 
-            <div className="pt-2 border-t space-y-1.5" style={{ borderColor: '#DEE9E4' }}>
-              <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <HeartPulse size={14} className="text-red-500" /> ECG Report: <span className="font-normal text-slate-700">{screening?.files?.ecgFileName || 'ecg_report.pdf'} ({screening?.files?.ecgStatus || 'Normal'})</span>
+            <div className="pt-2 border-t border-brand-border/20 space-y-1.5">
+              <div className="font-semibold text-brand-text flex items-center gap-1.5">
+                <HeartPulse size={14} className="text-red-500" /> ECG Report: <span className="font-normal text-brand-muted">{screening?.files?.ecgFileName || 'ecg_report.pdf'} ({screening?.files?.ecgStatus || 'Normal'})</span>
               </div>
-              <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                <Eye size={14} className="text-blue-500" /> Retinal Scan Report: <span className="font-normal text-slate-700">{screening?.files?.retinalFileName || 'retina_scan.png'} ({screening?.files?.retinalStatus || 'Normal'})</span>
+              <div className="font-semibold text-brand-text flex items-center gap-1.5">
+                <Eye size={14} className="text-blue-500" /> Retinal Scan Report: <span className="font-normal text-brand-muted">{screening?.files?.retinalFileName || 'retina_scan.png'} ({screening?.files?.retinalStatus || 'Normal'})</span>
               </div>
             </div>
           </div>
@@ -118,17 +118,17 @@ export function ReferralReview({ db, referral, onClose, onSign, onMarkSeen }) {
         </div>
 
         <div>
-          <div className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#8CA098' }}>Order Diagnostic Lab Tests</div>
+          <div className="text-xs font-bold uppercase tracking-wide mb-2 text-brand-muted">Order Diagnostic Lab Tests</div>
           <div className="space-y-2 mb-5">
             {LAB_TESTS_MAP[referral.disease].map((t) => (
-              <label key={t} className="flex items-center gap-2 p-2.5 rounded-lg border text-sm cursor-pointer" style={{ borderColor: '#DEE9E4', opacity: signed ? 0.7 : 1 }}>
-                <input type="checkbox" disabled={signed} checked={labTests.includes(t)} onChange={() => toggle(t)} /> {t}
+              <label key={t} className={`flex items-center gap-2 p-2.5 rounded-lg border text-sm cursor-pointer border-brand-border ${signed ? 'opacity-70' : 'hover:bg-slate-50 transition-colors'}`}>
+                <input type="checkbox" disabled={signed} checked={labTests.includes(t)} onChange={() => toggle(t)} className="accent-brand-primary" /> {t}
               </label>
             ))}
           </div>
 
           {signed ? (
-            <div className="p-3 rounded-lg text-sm font-semibold flex items-center gap-2" style={{ backgroundColor: '#E9F8EF', color: '#1E9E5A' }}>
+            <div className="p-3 rounded-lg text-sm font-semibold flex items-center gap-2 bg-brand-low-bg text-brand-low">
               <CheckCircle2 size={16} /> Signed off on {fmtDate(referral.signedAt)}
             </div>
           ) : (

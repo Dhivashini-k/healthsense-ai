@@ -1,19 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Sparkles, Send, Loader2, BookOpen, ChevronRight, Zap, CheckCircle2 } from 'lucide-react';
+import { X, Send, Loader2 } from 'lucide-react';
 import { C } from '../../utils/constants';
+
+const HealthHeroMascot = ({ className, size = 24 }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 100 100" 
+    fill="none" 
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    style={{ animation: 'floating 3s ease-in-out infinite' }}
+  >
+    <style>
+      {`
+        @keyframes floating {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+          100% { transform: translateY(0px); }
+        }
+      `}
+    </style>
+    <circle cx="50" cy="50" r="45" fill="currentColor" opacity="0.15"/>
+    <circle cx="50" cy="50" r="32" fill="currentColor"/>
+    <circle cx="38" cy="44" r="4" fill="white"/>
+    <circle cx="62" cy="44" r="4" fill="white"/>
+    <path d="M 42 58 Q 50 66 58 58" stroke="white" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
 
 export function Chatbot({ open, setOpen, role }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Hi! I'm **HealthHero**, your AI RAG Health Assistant. I analyze NCD risk profiles, clinical vitals, and medical guidelines to offer personalized health advice.\n\nAsk me about diet plans, blood pressure management, exercise routines, or risk explanations!",
-      sources: ["GENERAL_HEALTH"]
+      text: "Hi! I'm **Health Hero**, your AI clinical assistant. I can help answer questions about health conditions, diet, exercise, or explain risk factors in plain language.\n\nHow can I support you today?",
     }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chunks, setChunks] = useState([]);
-  const [showChunks, setShowChunks] = useState(false);
   const [backendOnline, setBackendOnline] = useState(false);
   const endRef = useRef(null);
 
@@ -39,17 +63,17 @@ export function Chatbot({ open, setOpen, role }) {
 
   const RAG_KNOWLEDGE_BASE = {
     diet: [
-      { condition: "HYPERTENSION", title: "DASH Low Sodium Protocol", text: "Restrict daily sodium intake to under 1,500mg. Increase potassium-rich foods like bananas, spinach, and sweet potatoes to balance arterial vascular tension.", score: 0.94, boost: "+0.35 risk boost" },
-      { condition: "DIABETES", title: "Low GI Fiber Protocol", text: "Focus on low glycemic index foods like oats, brown rice, and lentils. Aim for 30-35g fiber daily to stabilize postprandial glucose levels.", score: 0.91, boost: "+0.28 risk boost" },
-      { condition: "CVD", title: "Mediterranean Heart Diet", text: "Incorporate extra virgin olive oil, walnuts, and omega-3 rich fatty fish. Trans-fats must be strictly zero to reduce LDL cholesterol plaque buildup.", score: 0.88, boost: "+0.20 risk boost" }
+      { condition: "HYPERTENSION", title: "DASH Low Sodium Protocol", text: "Restrict daily sodium intake to under 1,500mg. Increase potassium-rich foods like bananas, spinach, and sweet potatoes to balance arterial vascular tension." },
+      { condition: "DIABETES", title: "Low GI Fiber Protocol", text: "Focus on low glycemic index foods like oats, brown rice, and lentils. Aim for 30-35g fiber daily to stabilize postprandial glucose levels." },
+      { condition: "CVD", title: "Mediterranean Heart Diet", text: "Incorporate extra virgin olive oil, walnuts, and omega-3 rich fatty fish. Trans-fats must be strictly zero to reduce LDL cholesterol plaque buildup." }
     ],
     exercise: [
-      { condition: "CVD", title: "Aerobic Conditioning Plan", text: "Perform 150 minutes per week of moderate-intensity brisk walking or cycling. Monitor resting heart rate and avoid sudden explosive isometric heavy lifting.", score: 0.92, boost: "+0.30 risk boost" },
-      { condition: "HYPERTENSION", title: "Dynamic Cardio Workout", text: "30-45 minutes daily of continuous aerobic walking or swimming helps relax peripheral vascular walls and lower systolic pressure by 5-8 mmHg.", score: 0.89, boost: "+0.25 risk boost" }
+      { condition: "CVD", title: "Aerobic Conditioning Plan", text: "Perform 150 minutes per week of moderate-intensity brisk walking or cycling. Monitor resting heart rate and avoid sudden explosive isometric heavy lifting." },
+      { condition: "HYPERTENSION", title: "Dynamic Cardio Workout", text: "30-45 minutes daily of continuous aerobic walking or swimming helps relax peripheral vascular walls and lower systolic pressure by 5-8 mmHg." }
     ],
     risk: [
-      { condition: "STROKE", title: "Arterial Pressure & Retinal Indicators", text: "Elevated systolic BP above 140 mmHg combined with retinal hypertensive changes significantly increases cerebral vascular stroke risk. Immediate pressure management required.", score: 0.95, boost: "+0.40 risk boost" },
-      { condition: "CKD", title: "Renal Function & Protein Care", text: "Long-standing unmanaged diabetes and high blood pressure strain kidney nephrons. Protein intake should be moderated to 0.6-0.8g/kg/day under specialist supervision.", score: 0.87, boost: "+0.22 risk boost" }
+      { condition: "STROKE", title: "Arterial Pressure & Retinal Indicators", text: "Elevated systolic BP above 140 mmHg combined with retinal hypertensive changes significantly increases cerebral vascular stroke risk. Immediate pressure management required." },
+      { condition: "CKD", title: "Renal Function & Protein Care", text: "Long-standing unmanaged diabetes and high blood pressure strain kidney nephrons. Protein intake should be moderated to 0.6-0.8g/kg/day under specialist supervision." }
     ]
   };
 
@@ -71,7 +95,6 @@ export function Chatbot({ open, setOpen, role }) {
 
     const intent = detectIntent(query);
     const retrieved = RAG_KNOWLEDGE_BASE[intent] || RAG_KNOWLEDGE_BASE.diet;
-    setChunks(retrieved);
 
     try {
       if (backendOnline) {
@@ -90,28 +113,25 @@ export function Chatbot({ open, setOpen, role }) {
           setMessages((prev) => [...prev, {
             role: "assistant",
             text: data.text || data.response || "Here is the guidance based on clinical guidelines.",
-            sources: retrieved.map(c => c.condition)
           }]);
           setLoading(false);
           return;
         }
       }
 
-      // Fallback RAG response generation
       setTimeout(() => {
         let reply = "";
         if (intent === 'diet') {
-          reply = "**Dietary Guidance & Clinical Protocol:**\n\n• **DASH Low Sodium:** Restrict sodium to under 1,500 mg/day to lower arterial wall tension.\n• **Low GI Fiber:** Consume oats, legumes, and leafy greens (30-35g fiber/day) to stabilize blood glucose.\n• **Healthy Fats:** Use extra virgin olive oil and walnuts rich in Omega-3 to protect coronary arteries.";
+          reply = "For now, choose more vegetables, pulses, whole grains, and unsalted foods. Cut back on packaged snacks and sugary drinks. Your clinician can tailor this to your readings and medications.";
         } else if (intent === 'exercise') {
-          reply = "**Safe Exercise & Physical Activity Plan:**\n\n• **Aerobic Workouts:** 150 minutes per week of brisk walking or stationary cycling.\n• **Blood Pressure Benefit:** 30-45 mins daily cardio lowers systolic pressure by 5-8 mmHg.\n• **Precaution:** Avoid heavy static weightlifting if blood pressure is above 140/90 mmHg.";
+          reply = "A comfortable walk is a good starting point. Build toward regular moderate activity, and stop if you feel chest pain, severe breathlessness, dizziness, or unusual weakness. Check with the care team before strenuous exercise.";
         } else {
-          reply = "**NCD Risk Profile & Clinical Assessment:**\n\n• **Hypertension & CVD:** High blood pressure strains arterial walls. Daily log target is < 120/80 mmHg.\n• **Stroke & Eye Retinal Care:** Hypertensive or diabetic retinal changes reflect microvascular strain.\n• **Kidney Protection (CKD):** Keep blood glucose in target range and avoid OTC NSAID painkillers.";
+          reply = "A screening result is an early signal, not a diagnosis. Recheck unusual measurements carefully and discuss anything flagged with the appropriate clinician, especially if symptoms are new or severe.";
         }
 
         setMessages((prev) => [...prev, {
           role: "assistant",
           text: reply,
-          sources: [...new Set(retrieved.map(c => c.condition))]
         }]);
         setLoading(false);
       }, 800);
@@ -119,8 +139,7 @@ export function Chatbot({ open, setOpen, role }) {
     } catch (e) {
       setMessages((prev) => [...prev, {
         role: "assistant",
-        text: "I'm currently operating in offline RAG knowledge base mode. You can ask about diet, blood pressure, exercise, or NCD risk profiles.",
-        sources: ["OFFLINE_RAG"]
+        text: "I'm having trouble connecting to my medical database. You can still ask me about general diet, blood pressure, exercise, or risk profiles.",
       }]);
       setLoading(false);
     }
@@ -136,70 +155,34 @@ export function Chatbot({ open, setOpen, role }) {
 
   return (
     <>
-      {/* Floating Toggle Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-xl z-40 transition-transform hover:scale-105"
-        style={{ backgroundColor: C.primary }}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-xl z-40 transition-transform hover:scale-105 bg-brand-primary"
       >
-        {open ? <X size={22} className="text-white" /> : <MessageCircle size={22} className="text-white" />}
+        {open ? <X size={22} className="text-white" /> : <HealthHeroMascot size={28} className="text-white" />}
       </button>
 
       {open && (
         <div
-          className="fixed bottom-24 right-6 w-[92vw] max-w-[440px] h-[560px] rounded-3xl shadow-2xl flex flex-col z-40 overflow-hidden border"
-          style={{ backgroundColor: C.card, borderColor: C.border }}
+          className="fixed bottom-24 right-6 w-[92vw] max-w-[440px] h-[560px] rounded-3xl shadow-2xl flex flex-col z-40 overflow-hidden border border-brand-border bg-brand-card"
         >
           {/* Header */}
-          <div className="px-4 py-3 flex items-center justify-between" style={{ backgroundColor: C.primary }}>
+          <div className="px-4 py-3 flex items-center justify-between bg-brand-primary-deep">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-emerald-400/20 flex items-center justify-center">
-                <Sparkles size={18} className="text-emerald-200" />
+                <HealthHeroMascot size={22} className="text-emerald-200" />
               </div>
               <div>
                 <div className="text-white font-extrabold text-sm leading-tight flex items-center gap-1.5">
-                  HealthHero <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 font-bold border border-emerald-300/30">⚡ RAG Active</span>
+                  Health Hero <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 font-bold border border-emerald-300/30">AI Assistant</span>
                 </div>
                 <div className="text-[11px] text-emerald-100/70 flex items-center gap-1">
-                  <span className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                  {backendOnline ? 'RAG Backend Connected' : 'Knowledge Base Ready'}
+                  <span className={`w-2 h-2 rounded-full ${backendOnline ? 'bg-emerald-400' : 'bg-emerald-400'}`} />
+                  {backendOnline ? 'Connected' : 'Ready'}
                 </div>
               </div>
             </div>
-
-            <button
-              onClick={() => setShowChunks(!showChunks)}
-              className="p-1.5 rounded-lg bg-emerald-900/40 text-emerald-100 hover:bg-emerald-800/60 text-xs flex items-center gap-1"
-              title="View Retrieved Knowledge Chunks"
-            >
-              <BookOpen size={14} /> Chunks ({chunks.length})
-            </button>
           </div>
-
-          {/* RAG Retrieved Chunks Drawer Overlay */}
-          {showChunks && (
-            <div className="p-3 bg-slate-900 text-white text-xs border-b max-h-48 overflow-y-auto space-y-2">
-              <div className="font-bold text-[11px] text-emerald-400 flex justify-between items-center">
-                <span>RETRIEVED KNOWLEDGE BASE CHUNKS ({chunks.length})</span>
-                <button onClick={() => setShowChunks(false)} className="text-slate-400 hover:text-white">✕</button>
-              </div>
-              {chunks.length === 0 ? (
-                <div className="text-slate-400 text-[11px]">Ask a question to see retrieved medical chunks.</div>
-              ) : (
-                chunks.map((c, i) => (
-                  <div key={i} className="p-2 rounded-lg bg-slate-800 border border-slate-700">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-900/80 text-emerald-300 font-bold text-[10px]">{c.condition}</span>
-                      <span className="text-[10px] text-slate-400">Score: {c.score}</span>
-                    </div>
-                    <div className="font-semibold text-slate-200">{c.title}</div>
-                    <div className="text-slate-300 text-[11px] mt-0.5">{c.text}</div>
-                    <div className="text-[10px] text-emerald-400 font-semibold mt-1">{c.boost}</div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
@@ -213,29 +196,19 @@ export function Chatbot({ open, setOpen, role }) {
                   }`}
                   dangerouslySetInnerHTML={{ __html: formatText(m.text) }}
                 />
-
-                {m.sources && m.sources.length > 0 && (
-                  <div className="flex gap-1 mt-1 flex-wrap">
-                    {m.sources.map((src, idx) => (
-                      <span key={idx} className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
-                        {src}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
 
             {loading && (
               <div className="flex items-center gap-2 p-3 bg-white rounded-2xl border border-slate-200 w-fit text-xs text-slate-500">
-                <Loader2 size={14} className="animate-spin text-emerald-600" /> Searching RAG knowledge base...
+                <Loader2 size={14} className="animate-spin text-emerald-600" /> Health Hero is typing...
               </div>
             )}
             <div ref={endRef} />
           </div>
 
           {/* Quick Suggestion Pills */}
-          <div className="px-3 py-2 bg-white border-t flex gap-1.5 overflow-x-auto no-scrollbar" style={{ borderColor: C.border }}>
+          <div className="px-3 py-2 bg-white border-t border-brand-border flex gap-1.5 overflow-x-auto no-scrollbar">
             <button onClick={() => sendQuestion("What should I eat for high blood pressure?")} className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap hover:bg-emerald-100">
               🥗 What should I eat?
             </button>
@@ -248,14 +221,13 @@ export function Chatbot({ open, setOpen, role }) {
           </div>
 
           {/* Input Bar */}
-          <div className="p-3 bg-white border-t flex gap-2" style={{ borderColor: C.border }}>
+          <div className="p-3 bg-white border-t border-brand-border flex gap-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendQuestion()}
-              placeholder="Ask HealthHero about diet, exercise, BP..."
-              className="flex-1 px-3.5 py-2.5 rounded-xl border text-xs outline-none focus:border-emerald-600 bg-slate-50"
-              style={{ borderColor: C.border }}
+              placeholder="Ask Health Hero about diet, exercise, BP..."
+              className="flex-1 px-3.5 py-2.5 rounded-xl border border-brand-border text-xs outline-none focus:border-emerald-600 bg-slate-50"
             />
             <button
               onClick={() => sendQuestion()}

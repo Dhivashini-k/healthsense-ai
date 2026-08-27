@@ -12,13 +12,14 @@ export function DiseaseDonut({ referrals, diseases }) {
   const total = data.reduce((a, b) => a + b.value, 0);
   
   return (
-    <Card className="p-5 flex-1 min-w-[300px]">
-      <div className="font-bold text-sm mb-1" style={{ color: C.text }}>Disease Risk Overview</div>
-      <div className="text-xs mb-2" style={{ color: C.textFaint }}>Moderate + High risk referrals by disease</div>
+    <Card className="p-5 flex-1 w-full overflow-hidden">
+      <div className="font-bold text-sm text-brand-text mb-1">Disease Risk Overview</div>
+      <div className="text-xs text-brand-faint mb-4">Moderate + High risk referrals by disease</div>
       {total === 0 ? (
         <EmptyState text="No referrals yet" />
       ) : (
-        <ResponsiveContainer width="100%" height={220}>
+        <div className="w-full h-[220px]">
+          <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={3}>
               {data.map((d, i) => (
@@ -29,6 +30,7 @@ export function DiseaseDonut({ referrals, diseases }) {
             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
           </PieChart>
         </ResponsiveContainer>
+        </div>
       )}
     </Card>
   );

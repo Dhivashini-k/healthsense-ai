@@ -75,10 +75,10 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold flex items-center gap-2" style={{ color: C.text }}>
-            <FlaskConical className="text-emerald-600" size={24} /> Clinical Lab Test Orders
+          <h1 className="text-2xl font-extrabold flex items-center gap-2 text-brand-text">
+            <FlaskConical className="text-brand-green" size={24} /> Clinical Lab Test Orders
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: C.textFaint }}>
+          <p className="text-xs mt-0.5 text-brand-faint">
             {isNurse ? "All diagnostic lab tests requested by specialists" : `Lab orders for ${scopeRole} referrals`}
           </p>
         </div>
@@ -90,23 +90,21 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
       <Card className="p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <div className="relative flex-1 min-w-[240px]">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.textFaint }} />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-faint" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by patient name or disease..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl text-sm border outline-none"
-              style={{ borderColor: C.border }}
+              className="w-full pl-9 pr-3 py-2 rounded-xl text-sm border border-brand-border outline-none bg-transparent focus:ring-1 focus:ring-brand-green"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <Filter size={15} style={{ color: C.textFaint }} />
+            <Filter size={15} className="text-brand-faint" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 rounded-xl border text-sm outline-none bg-white"
-              style={{ borderColor: C.border }}
+              className="px-3 py-2 rounded-xl border border-brand-border text-sm outline-none bg-transparent focus:ring-1 focus:ring-brand-green"
             >
               <option value="All">All Statuses</option>
               <option value="Signed">Signed Off</option>
@@ -119,7 +117,7 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left" style={{ color: C.textFaint }}>
+              <tr className="text-left text-brand-faint">
                 <th className="pb-3 font-semibold">Patient Name</th>
                 <th className="pb-3 font-semibold">Disease</th>
                 <th className="pb-3 font-semibold">Ordered Diagnostic Tests</th>
@@ -133,12 +131,12 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
               {filteredOrders.map((r) => {
                 const patient = getPatient(r.patientId);
                 return (
-                  <tr key={r.id} className="border-t hover:bg-slate-50 transition-colors" style={{ borderColor: C.border }}>
-                    <td className="py-3 font-semibold" style={{ color: C.text }}>
+                  <tr key={r.id} className="border-t border-brand-border hover:bg-slate-50 transition-colors">
+                    <td className="py-3 font-semibold text-brand-text">
                       <div>{patient?.name || "Unknown"}</div>
-                      <div className="text-xs font-normal text-slate-400">{patient?.age}y · {patient?.gender}</div>
+                      <div className="text-xs font-normal text-brand-muted">{patient?.age}y · {patient?.gender}</div>
                     </td>
-                    <td className="py-3 text-xs font-medium" style={{ color: C.textMuted }}>{r.disease}</td>
+                    <td className="py-3 text-xs font-medium text-brand-muted">{r.disease}</td>
                     <td className="py-3 text-xs font-semibold">
                       <div className="flex flex-wrap gap-1">
                         {r.labTests.map((t, idx) => (
@@ -148,8 +146,8 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
                         ))}
                       </div>
                     </td>
-                    <td className="py-3 text-xs" style={{ color: C.textMuted }}>{r.specialistRole}</td>
-                    <td className="py-3 text-xs" style={{ color: C.textFaint }}>{fmtDate(r.signedAt || r.createdAt)}</td>
+                    <td className="py-3 text-xs text-brand-muted">{r.specialistRole}</td>
+                    <td className="py-3 text-xs text-brand-faint">{fmtDate(r.signedAt || r.createdAt)}</td>
                     <td className="py-3"><StatusBadge status={r.status} /></td>
                     <td className="py-3">
                       <div className="flex items-center gap-2">
@@ -161,9 +159,8 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
                         </button>
                         <button
                           onClick={() => downloadRequisitionSlip(r)}
-                          className="p-1 rounded-lg border hover:bg-slate-100 text-slate-600"
+                          className="p-1 rounded-lg border border-brand-border hover:bg-slate-100 text-slate-600"
                           title="Download Requisition Slip"
-                          style={{ borderColor: C.border }}
                         >
                           <Download size={14} />
                         </button>
@@ -184,8 +181,8 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
             const p = getPatient(view.patientId);
             const s = db.screenings.find((x) => x.id === view.screeningId);
             return (
-              <div className="space-y-4 text-sm" style={{ color: C.text }}>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+              <div className="space-y-4 text-sm text-brand-text">
+                <div className="p-3 rounded-xl bg-slate-50 border border-brand-border flex justify-between items-center">
                   <div>
                     <div className="font-bold text-base">{p?.name}</div>
                     <div className="text-xs text-slate-500">{p?.age} yrs · {p?.gender} · {p?.phone}</div>
@@ -221,7 +218,7 @@ export function LabTestsView({ db, scopeRole, persist, showToast }) {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: C.border }}>
+                <div className="flex justify-end gap-2 pt-2 border-t border-brand-border">
                   <Button variant="outline" onClick={() => setView(null)}>Close</Button>
                   <Button onClick={() => downloadRequisitionSlip(view)}>
                     <Download size={15} /> Print / Download Requisition Slip

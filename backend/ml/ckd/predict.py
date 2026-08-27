@@ -26,14 +26,35 @@ def predict_ckd_risk(user_data: dict) -> dict:
     pipeline = joblib.load(model_path)
     metadata = joblib.load(meta_path)
     
-    # Convert input to DataFrame
-    df = pd.DataFrame([user_data])
+    # Define healthy default values for missing columns
+    healthy_defaults = {
+        'Age': 40, 'Sex': 'Male', 'Ethnicity': 'Caucasian', 'Country': 'USA', 
+        'Residence_Type': 'Urban', 'Education_Level': 'Bachelor', 'Socioeconomic_Status': 'Middle', 
+        'Height_cm': 170.0, 'Weight_kg': 70.0, 'BMI': 24.2, 'Waist_Circumference_cm': 85.0, 
+        'Smoking_Status': 'Never', 'Alcohol_Consumption': 'None', 
+        'Physical_Activity_Level': 'Moderate', 'Exercise_Hours_Per_Week': 3.0, 
+        'Water_Intake_L': 2.0, 'Fast_Food_Frequency_Per_Week': 1, 'Sleep_Duration_Hours': 7.0, 
+        'Stress_Level': 'Low', 'Diabetes': 0, 'Hypertension': 0, 'Cardiovascular_Disease': 0, 
+        'Heart_Failure': 0, 'Hyperlipidemia': 0, 'Kidney_Stones': 0, 'Recurrent_UTI': 0, 
+        'Autoimmune_Disease': 0, 'Family_History_CKD': 0, 'Obesity': 0, 'Systolic_BP': 120, 
+        'Diastolic_BP': 80, 'Blood_Pressure_Category': 'Normal', 'ACE_Inhibitor': 0, 
+        'ARB': 0, 'Diabetes_Medication': 0, 'Statin': 0, 'Diuretic': 0, 'NSAID_Usage': 0, 
+        'Medication_Adherence': 1, 'Number_of_Medications': 0, 'Hospital_Visits': 0, 
+        'Emergency_Visits': 0, 'Specialist_Visits': 0, 'Annual_Checkups': 1, 
+        'Health_Insurance': 1, 'Annual_Household_Income_USD': 60000, 'Employment_Status': 'Employed'
+    }
     
-    # Ensure all expected columns are present (fill missing with NaN/None)
+    # Merge user data with healthy defaults
+    merged_data = {**healthy_defaults, **user_data}
+    
+    # Convert input to DataFrame
+    df = pd.DataFrame([merged_data])
+    
+    # Ensure all expected columns are present, using default if somehow still missing
     all_features = metadata['numerical_features'] + metadata['categorical_features']
     for col in all_features:
         if col not in df.columns:
-            df[col] = None
+            df[col] = healthy_defaults.get(col, 0)
             
     # Reorder columns to match training
     df = df[all_features]

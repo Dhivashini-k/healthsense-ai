@@ -4,11 +4,11 @@ import { C } from '../../utils/constants';
 
 export function StatusBadge({ status }) {
   const map = {
-    Draft: [C.moderate, C.moderateBg],
-    Viewed: ["#2563EB", "#E7EEFD"],
-    Signed: [C.low, C.lowBg],
-    Archived: [C.textMuted, "#EEF2F1"]
+    Draft: "text-brand-moderate bg-brand-moderate-bg border-brand-moderate/30",
+    Viewed: "text-blue-600 bg-blue-50 border-blue-600/30",
+    Signed: "text-brand-low bg-brand-low-bg border-brand-low/30",
+    Archived: "text-brand-muted bg-slate-100 border-slate-200"
   };
-  const [color, bg] = map[status] || [C.textMuted, "#EEF2F1"];
-  return <Badge color={color} bg={bg}>{status}</Badge>;
+  const cls = map[status] || "text-brand-muted bg-slate-100 border-slate-200";
+  return <Badge className={cls}>{status}</Badge>;
 }

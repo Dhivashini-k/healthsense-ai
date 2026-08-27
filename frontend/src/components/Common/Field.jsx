@@ -1,10 +1,10 @@
 import React from 'react';
 import { C } from '../../utils/constants';
 
-export function Field({ label, children }) {
+export function Field({ label, children, className = "" }) {
   return (
-    <label className="block mb-4">
-      <div className="text-xs font-semibold mb-1.5" style={{ color: C.textMuted }}>{label}</div>
+    <label className={`block mb-4 ${className}`}>
+      <div className="text-xs font-bold mb-1.5 uppercase tracking-wider text-brand-muted">{label}</div>
       {children}
     </label>
   );

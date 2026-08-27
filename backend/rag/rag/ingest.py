@@ -2,7 +2,7 @@
 CLI ingestion command for the HealthSense AI RAG pipeline.
 
 Usage:
-    python -m chatbot.rag.ingest
+    python -m rag.rag.ingest
 
 Orchestrates: load → chunk → embed → store.
 Fully rebuilds the vector DB each run (idempotent).
@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import time
 
-from chatbot.rag.loader import load_documents
-from chatbot.rag.chunker import chunk_documents
-from chatbot.rag.embedder import embed_texts
-from chatbot.rag.store import build_collection
+from rag.rag.loader import load_documents
+from rag.rag.chunker import chunk_documents
+from rag.rag.embedder import embed_texts
+from rag.rag.store import build_collection
 
 
 def ingest() -> dict:
@@ -23,8 +23,8 @@ def ingest() -> dict:
     Run the full ingestion pipeline:
       1. Load all .md files from knowledge_base/
       2. Chunk documents into retrieval-friendly pieces
-      3. Generate embeddings with MiniLM-L6-v2
-      4. Store in ChromaDB
+      3. Generate embeddings with MiniLM-L6-v2 (or TF-IDF fallback)
+      4. Store in ChromaDB (or in-memory fallback)
 
     Returns a summary dict with stats.
     """
@@ -53,7 +53,7 @@ def ingest() -> dict:
     print(f"       Generated {len(embeddings)} embeddings (dim={len(embeddings[0]) if embeddings else '?'})")
 
     # ── Step 4: Store ─────────────────────────────────────────────────
-    print("\n[4/4] Storing in ChromaDB ...")
+    print("\n[4/4] Storing in vector store ...")
     stored = build_collection(chunks, embeddings)
 
     elapsed = time.time() - t0

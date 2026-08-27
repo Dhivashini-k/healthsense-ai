@@ -131,7 +131,7 @@ export default function MedicalReportPreview({ screening, onBack }) {
                   <div className="w-20 bg-slate-200 h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
-                        score >= 70 ? "bg-rose-600" : score >= 45 ? "bg-amber-500" : "bg-emerald-500"
+                        score >= 70 ? "bg-brand-high-bg" : score >= 45 ? "bg-brand-moderate-bg" : "bg-brand-low-bg"
                       }`}
                       style={{ width: `${score}%` }}
                     />

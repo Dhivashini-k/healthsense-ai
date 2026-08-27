@@ -10,11 +10,13 @@ import { NurseArea } from './components/Nurse/NurseArea';
 import { SpecialistArea } from './components/Specialist/SpecialistArea';
 import { AdminArea } from './components/Admin/AdminArea';
 import { Chatbot } from './components/Chatbot/Chatbot';
+import { LandingPage } from './components/Landing/LandingPage';
 import { uid, todayStr } from './utils/helpers';
 
 export default function App() {
   const [db, setDb] = useState(null);
   const [session, setSession] = useState(null);
+  const [hasEntered, setHasEntered] = useState(false);
   const [tab, setTab] = useState("dashboard");
   const [toast, setToast] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -24,7 +26,13 @@ export default function App() {
       try {
         const res = await storage.get("healthsense-db", true);
         if (res && res.value) {
-          setDb(JSON.parse(res.value));
+          const saved = JSON.parse(res.value);
+          if (saved.seedVersion === 2) setDb(saved);
+          else {
+            const seeded = seedDB();
+            setDb(seeded);
+            await storage.set("healthsense-db", JSON.stringify(seeded), true);
+          }
         } else {
           const seeded = seedDB();
           setDb(seeded);
@@ -95,6 +103,10 @@ export default function App() {
         <Loader2 className="animate-spin" style={{ color: C.primary }} size={28} />
       </div>
     );
+  }
+
+  if (!hasEntered) {
+    return <LandingPage onEnter={() => setHasEntered(true)} />;
   }
 
   if (!session) {

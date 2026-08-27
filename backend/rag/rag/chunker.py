@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from chatbot.rag.loader import KBDocument
+from rag.rag.loader import KBDocument
 
 
 # ── Tunables ──────────────────────────────────────────────────────────────

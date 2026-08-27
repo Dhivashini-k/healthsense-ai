@@ -12,8 +12,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from chatbot.rag.embedder import embed_query
-from chatbot.rag.store import query_collection
+from rag.rag.embedder import embed_query
+from rag.rag.store import query_collection
 
 
 # ── Boost constants ───────────────────────────────────────────────────────
@@ -145,7 +145,7 @@ def retrieve(
         risk_profile:  Dict mapping disease → risk level, e.g.
                        {"Hypertension": "High", "CVD": "Moderate", ...}.
         top_k:         Number of chunks to return after re-ranking.
-        initial_fetch: Number of candidates to fetch from ChromaDB.
+        initial_fetch: Number of candidates to fetch from the store.
 
     Returns:
         RetrievalResult with re-ranked chunks and debug information.
@@ -159,7 +159,7 @@ def retrieve(
     # 2. Embed the enriched query
     query_embedding = embed_query(enriched_query)
 
-    # 3. Fetch candidates from ChromaDB
+    # 3. Fetch candidates from vector store
     raw_results = query_collection(query_embedding, n_results=initial_fetch)
 
     # 4. Re-rank with metadata-based boosting
@@ -171,7 +171,7 @@ def retrieve(
     distances = raw_results.get("distances", [[]])[0]
 
     for i, (doc_id, text, meta, distance) in enumerate(zip(ids, documents, metadatas, distances)):
-        # ChromaDB cosine distance: distance = 1 - cosine_similarity
+        # Cosine distance: distance = 1 - cosine_similarity
         similarity = 1.0 - distance
 
         chunk_condition = meta.get("condition", "general")

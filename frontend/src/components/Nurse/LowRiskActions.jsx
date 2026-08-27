@@ -50,12 +50,12 @@ export function LowRiskActions({ patient, screening }) {
 
   return (
     <>
-      <Card className="p-5" style={{ backgroundColor: C.lowBg }}>
+      <Card className="p-5 bg-brand-green/5 border-brand-green/20">
         <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-          <div className="font-bold text-sm" style={{ color: C.low }}>Low Risk Prevention & Lifestyle Directives</div>
-          <span className="text-xs px-2.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: "#1E9E5A", color: "#fff" }}>LOW RISK</span>
+          <div className="font-bold text-sm text-brand-low">Low Risk Prevention & Lifestyle Directives</div>
+          <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-brand-green text-white">LOW RISK</span>
         </div>
-        <p className="text-xs mb-3" style={{ color: C.textMuted }}>
+        <p className="text-xs mb-3 text-brand-muted">
           Patient <b>{patient?.name}</b> is screened as Low Risk across all NCD markers. Follow the personalized diet and exercise directives below.
         </p>
 
@@ -99,26 +99,26 @@ export function LowRiskActions({ patient, screening }) {
             {DISEASES.map((d) => {
               const plan = DISEASE_PLANS[d];
               return (
-                <div key={d} className="p-4 rounded-xl border" style={{ borderColor: C.border }}>
-                  <div className="font-bold text-sm mb-2 flex items-center gap-1.5" style={{ color: C.primary }}>
+                <div key={d} className="p-4 rounded-xl border border-brand-border">
+                  <div className="font-bold text-sm mb-2 flex items-center gap-1.5 text-brand-primary">
                     <Heart size={16} /> {d} Prevention & Lifestyle Plan
                   </div>
                   <div className="grid md:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <div className="font-semibold mb-1" style={{ color: C.text }}>🥗 Diet Recommendations</div>
-                      <ul className="list-disc pl-4 space-y-1" style={{ color: C.textMuted }}>
+                      <div className="font-semibold mb-1 text-brand-text">🥗 Diet Recommendations</div>
+                      <ul className="list-disc pl-4 space-y-1 text-brand-muted">
                         {plan.diet.map((item, idx) => <li key={idx}>{item}</li>)}
                       </ul>
                     </div>
                     <div>
-                      <div className="font-semibold mb-1" style={{ color: C.text }}>🚴 Exercise Workout</div>
-                      <ul className="list-disc pl-4 space-y-1" style={{ color: C.textMuted }}>
+                      <div className="font-semibold mb-1 text-brand-text">🚴 Exercise Workout</div>
+                      <ul className="list-disc pl-4 space-y-1 text-brand-muted">
                         {plan.exercise.map((item, idx) => <li key={idx}>{item}</li>)}
                       </ul>
                     </div>
                     <div>
-                      <div className="font-semibold mb-1" style={{ color: C.text }}>⏱️ Lifestyle Care</div>
-                      <ul className="list-disc pl-4 space-y-1" style={{ color: C.textMuted }}>
+                      <div className="font-semibold mb-1 text-brand-text">⏱️ Lifestyle Care</div>
+                      <ul className="list-disc pl-4 space-y-1 text-brand-muted">
                         {plan.lifestyle.map((item, idx) => <li key={idx}>{item}</li>)}
                       </ul>
                     </div>

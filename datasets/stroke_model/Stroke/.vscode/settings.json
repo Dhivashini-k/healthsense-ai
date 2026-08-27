@@ -1,0 +1,15 @@
+{
+  "python.defaultInterpreterPath": "D:\\Program Files\\Python\\python.exe",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/stroke_model",
+    "${workspaceFolder}/diabetes_model"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/stroke_model",
+    "${workspaceFolder}/diabetes_model"
+  ],
+  "pyright.analysis.extraPaths": [
+    "${workspaceFolder}/stroke_model",
+    "${workspaceFolder}/diabetes_model"
+  ]
+}

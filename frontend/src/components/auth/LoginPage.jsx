@@ -1,50 +1,50 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useApp } from "../../context/AppContext";
-import { ShieldCheck, Lock, User, ArrowRight, LogIn } from "lucide-react";
+import { ShieldCheck, Lock, User, LogIn } from "lucide-react";
 
-const ROLE_CREDENTIALS = [
+const DEMO_ROLES = [
   {
     role: "nurse",
-    label: "Nurse Portal",
-    email: "nurse@healthsense.ai",
-    password: "nurse123",
+    label: "Nurse",
+    email: "nurse@healthsense.demo",
+    password: "Nurse@123",
     description: "Register patients, screen risk, and manage referrals."
   },
   {
-    role: "endocrinologist",
-    label: "Endocrinologist",
-    email: "endocrinologist@healthsense.ai",
-    password: "doc123",
+    role: "diabetes",
+    label: "Diabetes Specialist",
+    email: "diabetes@healthsense.demo",
+    password: "Diabetes@123",
     description: "Review diabetes referrals and sign reports."
   },
   {
-    role: "cardiologist",
-    label: "Cardiologist",
-    email: "cardiologist@healthsense.ai",
-    password: "doc123",
-    description: "Review hypertension / CVD referrals and order labs."
+    role: "hypertension",
+    label: "Hypertension Specialist",
+    email: "hypertension@healthsense.demo",
+    password: "Hypertension@123",
+    description: "Review hypertension referrals and order labs."
   },
   {
-    role: "neurologist",
-    label: "Neurologist",
-    email: "neurologist@healthsense.ai",
-    password: "doc123",
+    role: "cardiovascular",
+    label: "Cardiovascular Specialist",
+    email: "cardio@healthsense.demo",
+    password: "Cardio@123",
+    description: "Review CVD high-risk patients and sign reports."
+  },
+  {
+    role: "stroke",
+    label: "Stroke Specialist",
+    email: "stroke@healthsense.demo",
+    password: "Stroke@123",
     description: "Review stroke high-risk patients and sign reports."
   },
   {
-    role: "nephrologist",
-    label: "Nephrologist",
-    email: "nephrologist@healthsense.ai",
-    password: "doc123",
+    role: "ckd",
+    label: "CKD Specialist",
+    email: "ckd@healthsense.demo",
+    password: "CKD@123",
     description: "Review CKD referrals and approve lab orders."
-  },
-  {
-    role: "super_admin",
-    label: "Admin Portal",
-    email: "admin@healthsense.ai",
-    password: "admin123",
-    description: "Global access to dashboards and team workflows."
   }
 ];
 
@@ -54,6 +54,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = useForm({ defaultValues: { email: "", password: "" } });
 
@@ -63,10 +64,9 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  const handleQuickPortalLogin = async (credentials) => {
-    setLoading(true);
-    await loginUser({ email: credentials.email, password: credentials.password });
-    setLoading(false);
+  const handleAutofill = (credentials) => {
+    setValue("email", credentials.email);
+    setValue("password", credentials.password);
   };
 
   return (
@@ -79,30 +79,25 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-emerald-300 font-semibold">HealthSense AI</p>
-              <h1 className="mt-3 text-3xl font-black text-white">6-Portal Clinical Access</h1>
+              <h1 className="mt-3 text-3xl font-black text-white">Select your role</h1>
             </div>
           </div>
 
           <p className="text-sm text-slate-300 leading-relaxed max-w-md">
-            Choose your role to access Nurse and Specialist dashboards with real-time AI risk screening, referrals, lab test workflows, and risk report signing.
+            Choose your role to automatically fill the demo credentials for the respective dashboards.
           </p>
 
-          <div className="mt-10 grid gap-3">
-            {ROLE_CREDENTIALS.map((portal) => (
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {DEMO_ROLES.map((portal) => (
               <button
                 key={portal.role}
                 type="button"
-                onClick={() => handleQuickPortalLogin(portal)}
+                onClick={() => handleAutofill(portal)}
                 className="group w-full rounded-3xl border border-slate-700/80 bg-slate-900/80 px-5 py-4 text-left transition hover:border-emerald-400 hover:bg-slate-800"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">{portal.label}</p>
-                    <p className="mt-3 text-sm text-slate-200 font-semibold">{portal.description}</p>
-                  </div>
-                  <div className="rounded-2xl bg-emerald-500/15 p-3 text-emerald-200 group-hover:bg-emerald-500 transition">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-emerald-300">{portal.label}</p>
+                  <p className="text-xs text-slate-400">Demo account</p>
                 </div>
               </button>
             ))}
@@ -124,18 +119,18 @@ export default function LoginPage() {
                 type="email"
                 {...register("email", { required: "Email is required" })}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                placeholder="email@healthsense.ai"
+                placeholder="email@healthsense.demo"
               />
               <User className="absolute right-4 top-3.5 text-slate-400" />
             </div>
             {errors.email && <p className="text-[11px] text-rose-600">{errors.email.message}</p>}
 
             <label className="block text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
-              Password
+              Password (Demo)
             </label>
             <div className="relative">
               <input
-                type="password"
+                type="text"
                 {...register("password", { required: "Password is required" })}
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
                 placeholder="Enter secure password"
@@ -149,13 +144,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-700 disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-700 disabled:opacity-60"
             >
-              {loading ? "Signing in..." : "Sign in with JWT"}
+              <LogIn className="w-5 h-5" />
+              {loading ? "Signing in..." : "Sign In"}
             </button>
 
             <p className="text-xs text-slate-500 text-center">
-              Use the nurse or specialist credentials above to access the respective dashboard flows.
+              Click on a role card to automatically populate the demo credentials.
             </p>
           </form>
         </div>

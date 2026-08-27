@@ -50,23 +50,23 @@ export function SpecialistArea({ role, tab, db, persist, showToast }) {
   if (tab === "referrals" || reviewing) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-extrabold" style={{ color: C.text }}>Referrals — {diseases.join(" & ")}</h1>
+        <h1 className="text-2xl font-extrabold text-brand-text">Referrals — {diseases.join(" & ")}</h1>
         <Card className="p-5 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="text-left" style={{ color: C.textFaint }}>
+            <thead><tr className="text-left text-brand-faint">
               <th className="pb-2">Patient</th><th className="pb-2">Disease</th><th className="pb-2">Risk %</th><th className="pb-2">Level</th><th className="pb-2">Seen Status</th><th className="pb-2">Status</th><th className="pb-2">Action</th>
             </tr></thead>
             <tbody>
               {myRefs.slice().reverse().map((r) => (
-                <tr key={r.id} className={`border-t ${!r.isSeen && r.riskLevel === 'High' ? 'bg-red-50/50' : ''}`} style={{ borderColor: C.border }}>
-                  <td className="py-2.5 font-semibold" style={{ color: C.text }}>
+                <tr key={r.id} className={`border-t border-brand-border ${!r.isSeen && r.riskLevel === 'High' ? 'bg-red-50/50' : ''} hover:bg-slate-50 transition-colors`}>
+                  <td className="py-2.5 font-semibold text-brand-text">
                     {patientName(r.patientId)}
                     {!r.isSeen && r.riskLevel === "High" && (
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full animate-pulse">EMERGENCY</span>
                     )}
                   </td>
-                  <td className="py-2.5 text-xs" style={{ color: C.textMuted }}>{r.disease}</td>
-                  <td className="py-2.5 font-bold text-xs" style={{ color: r.riskLevel === "High" ? C.high : C.moderate }}>{r.riskPercent}%</td>
+                  <td className="py-2.5 text-xs text-brand-muted">{r.disease}</td>
+                  <td className={`py-2.5 font-bold text-xs ${r.riskLevel === 'High' ? 'text-brand-high' : 'text-brand-moderate'}`}>{r.riskPercent}%</td>
                   <td className="py-2.5"><RiskBadge level={r.riskLevel} /></td>
                   <td className="py-2.5 text-xs font-semibold">
                     {r.isSeen ? (
@@ -90,7 +90,7 @@ export function SpecialistArea({ role, tab, db, persist, showToast }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-extrabold" style={{ color: C.text }}>{role} Dashboard</h1>
+      <h1 className="text-2xl font-extrabold text-brand-text">{role} Dashboard</h1>
       <div className="flex flex-wrap gap-4">
         <KPICard icon={AlertTriangle} label="High Risk Cases" value={highRisk.length} color={C.high} onClick={() => setModal("high")} />
         <KPICard icon={UserPlus} label="New Today" value={today.length} color={C.accent} onClick={() => setModal("today")} />
@@ -105,13 +105,13 @@ export function SpecialistArea({ role, tab, db, persist, showToast }) {
       {modal && (
         <Modal title={modal === "high" ? "High Risk Cases" : modal === "today" ? "New Today" : modal === "pending" ? "Pending Review" : "Lab Test Orders"} onClose={() => setModal(null)} wide>
           <table className="w-full text-sm">
-            <thead><tr className="text-left" style={{ color: C.textFaint }}><th className="pb-2">Patient</th><th className="pb-2">Disease</th><th className="pb-2">Risk %</th><th className="pb-2">Status</th><th className="pb-2">Action</th></tr></thead>
+            <thead><tr className="text-left text-brand-faint"><th className="pb-2">Patient</th><th className="pb-2">Disease</th><th className="pb-2">Risk %</th><th className="pb-2">Status</th><th className="pb-2">Action</th></tr></thead>
             <tbody>
               {(modal === "high" ? highRisk : modal === "today" ? today : modal === "pending" ? pending : scheduled).map((r) => (
-                <tr key={r.id} className="border-t" style={{ borderColor: C.border }}>
-                  <td className="py-2 font-semibold" style={{ color: C.text }}>{patientName(r.patientId)}</td>
-                  <td className="py-2 text-xs" style={{ color: C.textMuted }}>{r.disease}</td>
-                  <td className="py-2 text-xs font-bold" style={{ color: r.riskLevel === "High" ? C.high : C.moderate }}>{r.riskPercent}%</td>
+                <tr key={r.id} className="border-t border-brand-border">
+                  <td className="py-2 font-semibold text-brand-text">{patientName(r.patientId)}</td>
+                  <td className="py-2 text-xs text-brand-muted">{r.disease}</td>
+                  <td className={`py-2 text-xs font-bold ${r.riskLevel === 'High' ? 'text-brand-high' : 'text-brand-moderate'}`}>{r.riskPercent}%</td>
                   <td className="py-2"><StatusBadge status={r.status} /></td>
                   <td className="py-2"><button onClick={() => { setModal(null); openReview(r); }} className="text-xs font-semibold px-2 py-1 bg-emerald-50 text-emerald-800 rounded-lg">Review</button></td>
                 </tr>
